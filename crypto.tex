@@ -1,0 +1,117 @@
+\documentclass[11pt]{article}
+\date{}
+\title{Notes from CS 6260 (Applied Cryptography)\\Georgia Tech, Fall 2012}
+\author{Christopher Martin\\{\tt chris.martin@gatech.edu}}
+
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{sidecap}
+
+% bold math in headers
+\makeatletter
+\DeclareRobustCommand*{\bfseries}{%
+  \not@math@alphabet\bfseries\mathbf
+  \fontseries\bfdefault\selectfont
+  \boldmath
+}
+\makeatother
+
+\renewcommand{\labelitemi}{}
+
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+
+\begin{document}
+
+\maketitle
+
+\section{Symmetric cryptography scheme}
+
+\begin{tabular}{r|l}
+Key space & $\mathcal{G}$ \\
+Message space & $\mathcal{M}$ \\
+Cypher space & $\mathcal{C}$ \\
+Key generator & $\Gen : \phi \rightarrow \mathcal{G}$ \\
+Encryption function &
+$\Enc : \{\mathcal{G} \times \mathcal{M}\} \rightarrow \mathcal{C}$ \\
+Decryption function &
+$\Dec : \{\mathcal{G} \times \mathcal{C}\} \rightarrow \mathcal{M}$
+\end{tabular}
+
+\section{Information theoretic security}
+
+Information theoretic security repels even resource-unbounded attackers.
+Shannon secrecy and perfect secrecy are equivalent definitions of
+information theoretic security for symmetric cryptography schemes.
+
+\paragraph{Shannon secrecy}
+A scheme is Shannon-secret with respect to the distribution $D$ over $\mathcal{M}$
+iff the ciphertext reveals no additional information about the message.
+\[ \forall \, M \in \mathcal{M}, \, C \in \mathcal{C}: \;
+  \Pr_{\substack{k \in \Gen\\m \in D}} \big[\, m = M \,\vert\, \Enc_k(m) = C \,\big]
+= \Pr_{m\in D} \big[\, m = M \,\big] \]
+
+\paragraph{Perfect secrecy}
+A scheme is perfectly secret iff the distributions of ciphertexts for any
+two messages are identical.
+\[\forall\, M_1, M_2 \in \mathcal{M},\, C \in \mathcal{C}:\;
+  \Pr_{K_1\in\Gen} \big[\, \Enc_{K_1}(M_1) = C \,\big]
+= \Pr_{K_2\in\Gen} \big[\, \Enc_{K_2}(M_2) = C \,\big] \]
+
+This model considers only a single message and ciphertext,
+so although a one-time pad it perfectly secret, a ``two-time pad'' is not.
+
+Perfect secrecy $\Rightarrow$ $|\mathcal{K}| \ge |\mathcal{M}|$.
+Proof idea: If not, $\exists$ $2$ messages with different probabilities
+of encrypting to the same cypertext.
+
+\section{Pseudo-random functions}
+
+\paragraph{Uniformly random function}
+$U$ is a random variable chosen uniformly from the set of all functions
+$\{0,1\}^m \rightarrow \{0,1\}^n$.
+
+\paragraph{Pseudo-random function}
+A PRF belongs to a family of functions
+$F : \{0,1\}^\ell \times \{0,1\}^m \rightarrow \{0,1\}^n$.
+Write $F_k(\cdot)$ to denote $F(k, \cdot)$.
+
+\begin{SCtable}[2.5][h]
+\caption*{Dimensions of some well-known PRFs}
+\begin{tabular}{l|lll}
+$\mathsf{DES}$ & $\ell = 56$ & $m = 64$ & $n = 64$ \\
+$\mathsf{AES_{128}}$ & $\ell = 128$ & $m = 128$ & $n = 128$ \\
+$\mathsf{AES_{192}}$ & $\ell = 192$ & $m = 128$ & $n = 128$
+\end{tabular}
+\end{SCtable}
+
+\paragraph{Distinguishing advantage}
+Consider an adversary $A$ who knows $F$, having oracle access
+to $F_k$ where $k$ was chosen uniformly at random, trying to
+distinguish the oracle's responses from a random function.
+The distinguishing advantange of $A$ against $F$ is
+\[ \textrm{Adv}_F^\textrm{prf} (A) = 
+\Pr_{k\in\{0,1\}^\ell} \big[ \, A^{F_k(\cdot)} \textrm{ accepts} \, \big]
+- \Pr_U \big[ \, A^{U(\cdot)} \textrm{ accepts} \, \big] \]
+
+\paragraph{$(t,q,\varepsilon)$-secure PRF}
+A PRF $F$ is $(t,q,\varepsilon)$-secure iff any adversary $A$,
+bounded by time $t$ and number of queries $q$,
+has advantage $\le \varepsilon$.
+
+\begin{SCtable}[2.5][h]
+\caption*{Examples of reasonable constants}
+\begin{tabular}{r|l}
+$t$ & $2^{128}$ \\
+$q$ & $2^{64}$ or $2^{32}$ \\
+$\varepsilon$ & $2^{-128}$
+\end{tabular}
+\end{SCtable}
+
+\end{document}
+
