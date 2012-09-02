@@ -22,9 +22,16 @@
 
 \renewcommand{\labelitemi}{}
 
-\newcommand{\Gen}{\mathsf{Gen}}
-\newcommand{\Enc}{\mathsf{Enc}}
-\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\eqdef}{\ensuremath{\equiv}}
+
+\newcommand{\Gen}{\ensuremath{\mathsf{Gen}}}
+\newcommand{\Enc}{\ensuremath{\mathsf{Enc}}}
+\newcommand{\Dec}{\ensuremath{\mathsf{Dec}}}
+
+\newcommand{\eps}{\ensuremath{\varepsilon}}
+
+\theoremstyle{remark}
+\newtheorem{thm}{Theorem}
 
 \begin{document}
 
@@ -66,9 +73,13 @@ two messages are identical.
 This model considers only a single message and ciphertext,
 so although a one-time pad is perfectly secret, a ``two-time pad'' is not.
 
+\begin{thm}
 Perfect secrecy $\Rightarrow$ $|\mathcal{K}| \ge |\mathcal{M}|$.
-Proof idea: If not, $\exists$ $2$ messages with different probabilities
+\begin{proof}
+If not, $\exists$ $2$ messages with different probabilities
 of encrypting to the same cypertext.
+\end{proof}
+\end{thm}
 
 \section{Pseudo-random functions}
 
@@ -91,27 +102,80 @@ $\mathsf{AES_{192}}$ & $\ell = 192$ & $m = 128$ & $n = 128$
 \end{SCtable}
 
 \paragraph{Distinguishing advantage}
-Consider an adversary $A$ who knows $F$, having oracle access
+Consider an adversary $\mathcal{A}$ who knows $F$, having oracle access
 to $F_k$ where $k$ was chosen uniformly at random, trying to
 distinguish the oracle's responses from a random function.
-The distinguishing advantange of $A$ against $F$ is
-\[ \textrm{Adv}_F^\textrm{prf} (A) = 
-\Pr_{k\in\{0,1\}^\ell} \big[ \, A^{F_k(\cdot)} \textrm{ accepts} \, \big]
-- \Pr_U \big[ \, A^{U(\cdot)} \textrm{ accepts} \, \big] \]
+The distinguishing advantange of $\mathcal{A}$ against $F$ is
+\[ \textrm{Adv}_F^\textrm{prf}(\mathcal{A}) \eqdef
+\Pr_{k\in\{0,1\}^\ell} \big[\, \mathcal{A}^{F_k(\cdot)}\;\textrm{accepts} \,\big]
+- \Pr_U \big[\, \mathcal{A}^{U(\cdot)} \textrm{ accepts} \,\big] \;\textrm{.} \]
 
-\paragraph{$(t,q,\varepsilon)$-secure PRF}
-A PRF $F$ is $(t,q,\varepsilon)$-secure iff any adversary $A$,
-bounded by time $t$ and number of queries $q$,
-has advantage $\le \varepsilon$.
+In time $O(t)$, we can brute-force $t$ keys to get
+advantage $t / 2^\ell$.
+
+\paragraph{$(t,q)$-bounded adversary}
+\begin{tabular}{r|l}
+$t$ & Running time \\
+$q$ & Number of queries
+\end{tabular}
+
+\paragraph{$(t,q,\eps)$-secure PRF}
+$F$ is $(t,q,\eps)$-secure iff
+$\forall$ $(t,q)$-bounded $\mathcal{A}$,
+\[ \textrm{Adv}_F^\textrm{prf}(\mathcal{A}) \le \eps \;\textrm{.} \]
 
 \begin{SCtable}[2.5][h]
 \caption*{Examples of reasonable constants}
 \begin{tabular}{r|l}
 $t$ & $2^{128}$ \\
 $q$ & $2^{64}$ or $2^{32}$ \\
-$\varepsilon$ & $2^{-128}$
+$\eps$ & $2^{-128}$
 \end{tabular}
 \end{SCtable}
 
-\end{document}
+The existence of secure PRFs has not been proven,
+but there are some functions that have never been
+broken and are widely assumed to be PRFs.
 
+\section{Reduction}
+
+\paragraph{Karp (many-to-one) reduction}
+Reduction from $A$ to $B$ transforms
+an instance of $A$ to an instance of $B$.
+
+\paragraph{Cook (Turing) reduction}
+Reduction from $A$ to $B$ solves $A$
+using a subroutine that solves $B$.
+
+\paragraph{Key recovery security}
+$F$ is $(t,q,\eps)$-kr-secure
+iff $\forall$ $(t,q)$-bounded $\mathcal{A}$,
+\[ \textrm{Adv}_F^\textrm{kr} \eqdef
+\Pr_{k \in \{0,1\}^\ell} \big[\,
+  \mathcal{A}^{F_k(\cdot)}\;\textrm{outputs}\;k
+\,\big] \le \eps \;\textrm{.} \]
+
+\begin{thm}
+If $F$ is a $(t,q,\eps)$-secure PRF
+for $q < 2^m$, then
+$F$ is $(t',q',\eps')$-kr-secure for
+$t' \approx t$, $q' = q-1$, $\eps' = \epsilon + 2^{-n}$.
+\begin{proof}
+Cook reduction.
+For any kr-adversary $\mathcal{A'}$ running in
+time $t'$ and making $q'<2^m$ queries, let $\mathcal{A}$ be
+the PRF adversary:
+\begin{quote}
+$k' \; \leftarrow \; \mathcal{A}'(\mathcal{O})$ \\
+$x \; \leftarrow$ a value that $\mathcal{A}'$ did not query with \\
+$y \; \leftarrow \; \mathcal{O}(x)$ \\
+Accept iff $y = F_{k'}(x)$
+\end{quote}
+$\mathcal{A}$ runs in time $t \approx t'$ and makes $q = q'+1$ queries.
+\[ \textrm{Adv}_F^\textrm{prf}(\mathcal{A}) \ge
+\textrm{Adv}_F^\textrm{kr}(\mathcal{A}') - 2^{-n}
+\;\textrm{.} \qedhere \]
+\end{proof}
+\end{thm}
+
+\end{document}
