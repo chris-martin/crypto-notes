@@ -9,7 +9,6 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{amsmath,amsfonts,amssymb,amsthm}
-\usepackage{sidecap}
 
 % bold math in headers
 \makeatletter
@@ -29,6 +28,8 @@
 \newcommand{\Dec}{\ensuremath{\mathsf{Dec}}}
 
 \newcommand{\eps}{\ensuremath{\varepsilon}}
+
+\newcommand{\bit}{\ensuremath{\{\texttt{0},\texttt{1}\}}}
 
 \theoremstyle{remark}
 \newtheorem{thm}{Theorem}
@@ -92,23 +93,14 @@ A PRF belongs to a family of functions
 $F : \{0,1\}^\ell \times \{0,1\}^m \rightarrow \{0,1\}^n$.
 Write $F_k(\cdot)$ to denote $F(k, \cdot)$.
 
-\begin{SCtable}[2.5][h]
-\caption*{Dimensions of some well-known PRFs}
-\begin{tabular}{l|lll}
-$\mathsf{DES}$ & $\ell = 56$ & $m = 64$ & $n = 64$ \\
-$\mathsf{AES_{128}}$ & $\ell = 128$ & $m = 128$ & $n = 128$ \\
-$\mathsf{AES_{192}}$ & $\ell = 192$ & $m = 128$ & $n = 128$
-\end{tabular}
-\end{SCtable}
-
 \paragraph{Distinguishing advantage}
 Consider an adversary $\mathcal{A}$ who knows $F$, having oracle access
 to $F_k$ where $k$ was chosen uniformly at random, trying to
 distinguish the oracle's responses from a random function.
 The distinguishing advantange of $\mathcal{A}$ against $F$ is
 \[ \textrm{Adv}_F^\textrm{prf}(\mathcal{A}) \eqdef
-\Pr_{k\in\{0,1\}^\ell} \big[\, \mathcal{A}^{F_k(\cdot)}\;\textrm{accepts} \,\big]
-- \Pr_U \big[\, \mathcal{A}^{U(\cdot)} \textrm{ accepts} \,\big] \;\textrm{.} \]
+\Pr_{k\in\{0,1\}^\ell} \big[\, \mathcal{A}^{F_k}\;\textrm{accepts} \,\big]
+- \Pr_U \big[\, \mathcal{A}^U \textrm{ accepts} \,\big] \;\textrm{.} \]
 
 In time $O(t)$, we can brute-force $t$ keys to get
 advantage $t / 2^\ell$.
@@ -124,15 +116,14 @@ $F$ is $(t,q,\eps)$-secure iff
 $\forall$ $(t,q)$-bounded $\mathcal{A}$,
 \[ \textrm{Adv}_F^\textrm{prf}(\mathcal{A}) \le \eps \;\textrm{.} \]
 
-\begin{SCtable}[2.5][h]
-\caption*{Examples of reasonable constants}
+\paragraph{Examples of reasonable constants}
 \begin{tabular}{r|l}
 $t$ & $2^{128}$ \\
 $q$ & $2^{64}$ or $2^{32}$ \\
 $\eps$ & $2^{-128}$
 \end{tabular}
-\end{SCtable}
 
+\paragraph{Existence}
 The existence of secure PRFs has not been proven,
 but there are some functions that have never been
 broken and are widely assumed to be PRFs.
@@ -177,5 +168,62 @@ $\mathcal{A}$ runs in time $t \approx t'$ and makes $q = q'+1$ queries.
 \;\textrm{.} \qedhere \]
 \end{proof}
 \end{thm}
+
+\paragraph{Example PRF construction}
+For PRF $F : \bit^\ell \times \bit^n \rightarrow \bit^n$,
+$F'_k(x) \eqdef F_k(F_k(x)) \Vert F_k(\overline{F_k(x)})$
+
+\begin{thm}
+$F'$ is $\displaystyle (t, \frac{q}{3}, \eps + \frac{q^2}{2^n})$-secure.
+\begin{proof}
+Let $\mathcal{A}'$ be an attacker on $F'$.
+Define $\mathcal{A}$ as:
+\begin{quote}
+$\mathcal{O}' \eqdef
+\mathcal{O}(\mathcal{O}(x)) \Vert \mathcal{O}(\overline{\mathcal{O}(x)})$
+(done with $3$ queries to $\mathcal{O}$)
+
+Accept iff $\mathcal{A}'^{\,\mathcal{O}'}$ accepts
+\end{quote}
+$\mathcal{O}'(x)$ simulates $F'$ perfectly, so
+$\displaystyle
+\Pr_k \big[\, \mathcal{A}^{F_k} \,\big] =
+\Pr_k \big[\, \mathcal{A'}^{\,F'_k} \,\big]$.
+
+$\mathcal{O}'$ does not simulate $U$ perfectly, but it is close.
+We have independence as long as all of the
+$\mathcal{O}(x)$, $\overline{\mathcal{O}(x)}$ are distinct.
+Using union bound, this probability $\le \frac{q^2}{2^n}$
+\end{proof}
+\end{thm}
+
+\section{Pseudo-random permutations}
+
+In a permutation family
+$F : \{0,1\}^\ell \times \{0,1\}^n \rightarrow \{0,1\}^n$,
+every $F_k$ is bijective.
+
+A secure PRP is computationally indistinguishable from
+a uniformly random permutation.
+
+\paragraph{Some well-known PRPs}
+\begin{tabular}{l|lll}
+$\mathsf{DES}$ & $\ell = 56$ & $n = 64$ \\
+$\mathsf{AES_{128}}$ & $\ell = 128$ & $n = 128$ \\
+$\mathsf{AES_{192}}$ & $\ell = 192$ & $n = 128$
+\end{tabular}
+
+\paragraph{Strong PRP / block cipher}
+Attackers with oracle access to both $F$ and $F^{-1}$
+have small advantage. \[
+\text{Adv}_F^\text{sprp} \eqdef
+  \Pr_k \big[\, \mathcal{A}^{F_k,F_k^{-1}} \; \text{accepts} \,\big]
+- \Pr_P \big[\, \mathcal{A}^{P,P^{-1}} \; \text{accepts} \,\big]
+\le \eps
+\]
+
+\paragraph{PRF/PRP switching lemma}
+If $G$ is a $(t, q, \eps)$-secure PRP (not necessarily strong),
+then $F$ is a $(t, q, \eps + \frac{q^2}{2^{n+1}})$-secure PRF.
 
 \end{document}
