@@ -41,14 +41,14 @@
 \section{Symmetric cryptography scheme}
 
 \begin{tabular}{r|l}
-Key space & $\mathcal{G}$ \\
+Key space & $\mathcal{K}$ \\
 Message space & $\mathcal{M}$ \\
 Cypher space & $\mathcal{C}$ \\
-Key generator & $\Gen : \phi \rightarrow \mathcal{G}$ \\
+Key generator & $\Gen : \phi \rightarrow \mathcal{K}$ \\
 Encryption function &
-$\Enc : \{\mathcal{G} \times \mathcal{M}\} \rightarrow \mathcal{C}$ \\
+$\Enc : \{\mathcal{K} \times \mathcal{M}\} \rightarrow \mathcal{C}$ \\
 Decryption function &
-$\Dec : \{\mathcal{G} \times \mathcal{C}\} \rightarrow \mathcal{M}$
+$\Dec : \{\mathcal{K} \times \mathcal{C}\} \rightarrow \mathcal{M}$
 \end{tabular}
 
 \section{Information theoretic security}
@@ -61,15 +61,15 @@ information theoretic security for symmetric cryptography schemes.
 A scheme is Shannon-secret with respect to the distribution $D$ over $\mathcal{M}$
 iff the ciphertext reveals no additional information about the message.
 \[ \forall \, M \in \mathcal{M}, \, C \in \mathcal{C}: \;
-  \Pr_{\substack{k \in \Gen\\m \in D}} \big[\, m = M \,\vert\, \Enc_k(m) = C \,\big]
+  \Pr_{\substack{k \leftarrow \Gen\\m \in D}} \big[\, m = M \,\vert\, \Enc_k(m) = C \,\big]
 = \Pr_{m\in D} \big[\, m = M \,\big] \]
 
 \paragraph{Perfect secrecy}
 A scheme is perfectly secret iff the distributions of ciphertexts for any
 two messages are identical.
 \[\forall\, M_1, M_2 \in \mathcal{M},\, C \in \mathcal{C}:\;
-  \Pr_{K_1\in\Gen} \big[\, \Enc_{K_1}(M_1) = C \,\big]
-= \Pr_{K_2\in\Gen} \big[\, \Enc_{K_2}(M_2) = C \,\big] \]
+  \Pr_{K_1\leftarrow\Gen} \big[\, \Enc_{K_1}(M_1) = C \,\big]
+= \Pr_{K_2\leftarrow\Gen} \big[\, \Enc_{K_2}(M_2) = C \,\big] \]
 
 This model considers only a single message and ciphertext,
 so although a one-time pad is perfectly secret, a ``two-time pad'' is not.
@@ -225,5 +225,67 @@ have small advantage. \[
 \paragraph{PRF/PRP switching lemma}
 If $G$ is a $(t, q, \eps)$-secure PRP (not necessarily strong),
 then $F$ is a $(t, q, \eps + \frac{q^2}{2^{n+1}})$-secure PRF.
+
+\section{Secure symmetric encryption}
+
+Perfect secrecy is impossible where $m > \ell$, but
+computational security is possible with pseudorandom objects.
+
+\paragraph{Electronic code block (ECB)}
+Suppose $F$ is a secure PRP
+$\bit^\ell\times\bit^n\rightarrow\bit^n$
+with $F$ and $F^{-1}$ efficiently computable.
+~\\[5pt]
+\begin{tabular}{r|l}
+\Gen & $k \leftarrow \bit^\ell$ \\[5pt]
+\Enc & $M'$ $\leftarrow$ Pad message $M$
+       with \texttt{1} and some \texttt{0}s
+       to a multiple of $n$. \\
+     & Break $M'$ into $n$-bit blocks $m_0, m_1, \ldots$ \\
+     & Apply $F_k$ to each of the $\{m\}$ \\[5pt]
+\Dec & Apply $F'_k$ to each of the $\{m\}$
+\end{tabular}\\\\
+Repeated blocks give repeated ciphertext.
+Never use ECB.
+
+\paragraph{Security model}
+Adversary, seeing all cipthertexts and
+having oracle access to $\Enc_k$,
+learns nothing about plaintexts
+(except message length, which is unavoidable).
+
+$SE = (\Gen, \Enc, \Dec)$ is
+$(t, \sigma, \eps)$-IND-CPA secure
+(``indistinguishable under chosen-plaintext attack'')
+iff $\forall$ $(t, \sigma)$-bounded $\mathcal{A}$, \[
+\text{Adv}_{SE}^\text{indcpa}(\mathcal{A}) \eqdef
+\Pr_{k \leftarrow \Gen} \big[\, \mathcal{A}^{L_k} \; \text{accepts} \,\big]
+- \Pr_{k \leftarrow \Gen} \big[\, \mathcal{A}^{R_k} \; \text{accepts} \,\big]
+\;\text{,}
+\]
+\[ L_k(m, m') \eqdef \Enc_k(m)
+\;\text{if}\; |m| = |m'|\;\text{else}\; \bot \;\text{,} \]
+\[ R_k(m, m') \eqdef \Enc_k(m')
+\;\text{if}\; |m| = |m'|\;\text{else}\; \bot \;\text{,} \]
+$t$ is the running time, and
+$\sigma$ total length of all message queries.
+
+Equivalent definition:
+$\Enc_k$ is computationally indistinguishable from
+a zero-encrypting oracle $Z_k \eqdef \Enc_k(\texttt{0}^m)$.
+
+\paragraph{Stateful counter mode (CTRS)}
+Let $F$ be a PRF with $m = n$.
+~\\[5pt]
+\begin{tabular}{r|l}
+\Gen & $k \leftarrow \bit^\ell$, $counter \leftarrow 0$ \\[5pt]
+\Enc & echo $counter$ \\
+     & for each message block $m$: \\
+     & ~~~~echo $F_k(counter) \oplus m_i$ \\
+     & ~~~~increment $counter$
+\end{tabular}\\
+
+If $F$ is a $(t,q,\eps)$-secure PRF, then
+CTRS$(F)$ is $(t'\approx t, qn, 2\eps)$-IND-CPA secure.
 
 \end{document}
