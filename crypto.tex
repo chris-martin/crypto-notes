@@ -171,7 +171,7 @@ $\mathcal{A}$ runs in time $t \approx t'$ and makes $q = q'+1$ queries.
 
 \paragraph{Example PRF construction}
 For PRF $F : \bit^\ell \times \bit^n \rightarrow \bit^n$,
-$F'_k(x) \eqdef F_k(F_k(x)) \Vert F_k(\overline{F_k(x)})$
+$F'_k(x) \eqdef F_k(F_k(x)) \Vert F_k(\overline{F_k(\overline{x})})$
 
 \begin{thm}
 $F'$ is $\displaystyle (t, \frac{q}{3}, \eps + \frac{q^2}{2^n})$-secure.
@@ -180,7 +180,7 @@ Let $\mathcal{A}'$ be an attacker on $F'$.
 Define $\mathcal{A}$ as:
 \begin{quote}
 $\mathcal{O}' \eqdef
-\mathcal{O}(\mathcal{O}(x)) \Vert \mathcal{O}(\overline{\mathcal{O}(x)})$
+\mathcal{O}(\mathcal{O}(x)) \Vert \mathcal{O}(\overline{\mathcal{O}(\overline{x})})$
 (done with $3$ queries to $\mathcal{O}$)
 
 Accept iff $\mathcal{A}'^{\,\mathcal{O}'}$ accepts
@@ -192,7 +192,7 @@ $\displaystyle
 
 $\mathcal{O}'$ does not simulate $U$ perfectly, but it is close.
 We have independence as long as all of the
-$\mathcal{O}(x)$, $\overline{\mathcal{O}(x)}$ are distinct.
+$\mathcal{O}(x)$, $\overline{\mathcal{O}(\overline{x})}$ are distinct.
 Using union bound, this probability $\le \frac{q^2}{2^n}$
 \end{proof}
 \end{thm}
