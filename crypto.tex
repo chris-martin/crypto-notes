@@ -31,6 +31,8 @@
 
 \newcommand{\bit}{\ensuremath{\{\texttt{0},\texttt{1}\}}}
 
+\newcommand{\ang}[1]{\ensuremath{\langle#1\rangle}}
+
 \theoremstyle{remark}
 \newtheorem{thm}{Theorem}
 
@@ -274,6 +276,17 @@ Equivalent definition:
 $\Enc_k$ is computationally indistinguishable from
 a zero-encrypting oracle $Z_k \eqdef \Enc_k(\texttt{0}^m)$.
 
+\paragraph{Query repetition}
+\Enc in an IND-CPA-secure scheme should not always return the same ciphertext
+for multiple encryptions of the same message.
+This attack has advantage $1$ against any deterministic and stateless scheme:
+\\~\\
+\begin{tabular}{|l}
+$c \leftarrow \mathcal{O}(\ang{0}, \ang{0})$\\
+$c' \leftarrow \mathcal{O}(\ang{0}, \ang{1})$\\
+Accept iff $c = c'$
+\end{tabular}
+
 \paragraph{Stateful counter mode (CTRS)}
 Let $F$ be a PRF with $m = n$.
 ~\\[5pt]
@@ -285,7 +298,62 @@ Let $F$ be a PRF with $m = n$.
      & ~~~~increment $counter$
 \end{tabular}\\
 
+CTRS is not used much, because preserving $counter$ is difficult.
+
+\begin{thm}
 If $F$ is a $(t,q,\eps)$-secure PRF, then
 CTRS$(F)$ is $(t'\approx t, qn, 2\eps)$-IND-CPA secure.
+\begin{proof}
+
+We will show using a hybrid argument that
+$\forall$ $(t',\sigma)$-bounded $A'$ against CTRS$(F)$
+where $\sigma \le n\,2^m$, there is a
+$(t\approx t', q=\sigma/n)$-bounded attacker $\mathcal{A}$
+attacking $F$ such that
+$\text{Adv}_\text{CTRS$(F)$}^\text{indcpa}(\mathcal{A}')
+\le 2\,\text{Adv}_F^\text{prf}(\mathcal{A})$.
+
+Given $\mathcal{O}$ that is either $F$ or $U$:\\
+
+$\mathcal{A} \eqdef \mathcal{A}_L \eqdef$
+\begin{tabular}{|l}
+$counter$ $\leftarrow$ $0$\\
+$\mathcal{O}'(m,m') \eqdef$
+\begin{tabular}{|l}
+If $|m|=|m'|$, return $\bot$\\
+Split $m$ into blocks $m_0, m_1, \ldots, m_{t-1}$\\
+$y_i$ $\leftarrow$ $\mathcal{O}(counter + i)$ $\forall$ $i\in[0,t)$\\
+Return $counter\Vert \text{join}_i(m_i \oplus y_i)$\\
+$counter$ $\leftarrow$ $counter + t$
+\end{tabular}\\
+Accept iff $\mathcal{A}'^{\,\mathcal{O}'}$ accepts
+\end{tabular}
+
+Also define $\mathcal{A}_R$ similarly using $m'$ instead of $m$.
+
+$\mathcal{A}_L^{F_k}$ perfectly simulates $L_k$ to $\mathcal{A}'$.
+
+$\mathcal{A}_L^U$ does not simulate $R_k$, but it does simulate an oracle $\$$:
+\\~\\
+$\$(m,m') \eqdef$
+\begin{tabular}{|l}
+If $|m|=|m'|$, return $\bot$\\
+Return $counter\Vert[\text{random bits}]$\\
+$counter$ $\leftarrow$ $counter + \text{number of blocks}$
+\end{tabular}
+
+\begin{align*}
+P_\ell &= \Pr_k[\mathcal{A}_L^{F_k}]= \Pr_k[\mathcal{A}'^{\,L_k}] \\
+P_r &= \Pr_k[\mathcal{A}_R^{F_k}]= \Pr_k[\mathcal{A}'^{\,R_k}] \\
+P_\$ &= \Pr_k[\mathcal{A}_L^U]=\Pr_k[\mathcal{A}_R^U]= \Pr_k[\mathcal{A}'^{\,\$}]
+\end{align*}
+\begin{align*}
+\text{Adv}_\text{CTRS$(F)$}^\text{indcpa}(\mathcal{A}') &= |P_\ell - P_r| \\
+&\le |(P_\ell - P_\$) + (P_r - P_\$)| & \text{(triangle inequality)} \\
+&\le \eps+\eps = 2\eps
+\end{align*}
+
+\end{proof}
+\end{thm}
 
 \end{document}
