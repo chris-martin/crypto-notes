@@ -25,7 +25,11 @@
 
 \newcommand{\Gen}{\ensuremath{\mathsf{Gen}}}
 \newcommand{\Enc}{\ensuremath{\mathsf{Enc}}}
+\newcommand{\AEnc}{\ensuremath{\mathsf{AEnc}}}
+\newcommand{\EEnc}{\ensuremath{\mathsf{EEnc}}}
 \newcommand{\Dec}{\ensuremath{\mathsf{Dec}}}
+\newcommand{\Tag}{\ensuremath{\mathsf{Tag}}}
+\newcommand{\Ver}{\ensuremath{\mathsf{Ver}}}
 
 \newcommand{\eps}{\ensuremath{\varepsilon}}
 
@@ -287,6 +291,8 @@ $c' \leftarrow \mathcal{O}(\ang{0}, \ang{1})$\\
 Accept iff $c = c'$
 \end{tabular}
 
+\section{Block cipher modes}
+
 \paragraph{Stateful counter mode (CTRS)}
 Let $F$ be a PRF with $m = n$.
 ~\\[5pt]
@@ -355,5 +361,138 @@ P_\$ &= \Pr_k[\mathcal{A}_L^U]=\Pr_k[\mathcal{A}_R^U]= \Pr_k[\mathcal{A}'^{\,\$}
 
 \end{proof}
 \end{thm}
+
+\paragraph{Counter modes}~\\
+
+\begin{tabular}{l|l|l}
+CTRS & One global counter &
+$\text{adv}^\text{indcpa} \le 2\,\text{adv}^\text{prf}$ \\[5pt]
+CTR\$ & Random IV for each message &
+$\text{adv}^\text{indcpa} \le 2\,\text{adv}^\text{prf}+q^2/2^n$ \\[5pt]
+CTR\$\$ & Random IV for each block
+\end{tabular}
+
+\paragraph{Cipher block chaining (CBC)}
+
+$C_0 = \text{IV}$,
+$C_i = F_k(C_{i-1}\oplus m_i)$
+
+\Dec\ requires being able to calculate $F^{-1}$.
+
+If $F$ is a $(t,q,\eps)$-secure PRF, then
+CBC[$F$] is $(\approx t, \sigma=qn, 2\eps+q^2/2^n)$-ind-cpa-secure.
+The proof requires showing that for $U$, all inputs to $U$
+are distinct (minus a birthday term).
+
+\section{Message authentication code (MAC)}
+
+Alice sends message $m$ and $t \leftarrow \Tag_k(m)$.
+Eve intercepts $(m,t)$ and delivers $(m',t')$ to Bob.
+Bob runs $\Ver_k(m',t')$.
+
+$\Ver_k$ returns $\begin{cases}
+m & \text{if $t'$ is a valid tag ($\Ver_k$ ``accepts'')} \\
+\bot & \text{otherwise ($\Ver_k$ ``rejects'')}
+\end{cases}$
+
+Eve has access to a $\Tag_k$ oracle and can
+make many attempts on $\Ver$.
+Eve ``wins'' if \Ver\ accepts on an $m'$
+not previously queried to $\Tag_k$.
+
+\paragraph{Conerns ignored by this model}
+\begin{itemize}
+\item Dropped messages
+\item Replay attacks (``freshness'' of messages)
+\item Message sequence
+\end{itemize}
+
+\paragraph{Unforgeability under chosen message attack}
+
+\[ \text{Adv}_\text{MAC}^\text{ufmca}(\mathcal{A}) \eqdef
+\Pr_{k\leftarrow\Gen} \left[\;\mathcal{A}^{\Tag_k,\Ver_k}\;\text{``wins''}\;\right] \]
+
+MAC is $(t, q_t, q_v, \eps)$-uf-cma-secure iff
+advantage of an attacker
+bounded by time $t$,
+number of $\Tag$ queries $q_t$, and
+number of $\Ver$ queries $q_v$
+is less than $\eps$.
+
+\paragraph{Examples of reasonable constants}
+\begin{tabular}{r|l}
+$t$ & $2^{80}$ or $2^{128}$ \\
+$q_v,q_t$ & $2^{40}$ or $2^{56}$ \\
+$\eps$ & $2^{-40}$ or $2^{-56}$
+\end{tabular}
+
+\paragraph{Brute-force MAC attacks}
+
+\begin{itemize}
+\item Key search:
+Get a few oracle tags, and guess $k$.
+$\text{Adv} = t/2^\ell$.
+\item Tag search:
+$\text{Adv} = t/2^s$ where $s$ is the tag length.
+\end{itemize}
+
+\paragraph{PRF-based MAC}
+$\Tag_k \eqdef F_k$
+
+$\forall$ $(t,q_t,q_v)$-bounded $\mathcal{B}$,
+$\exists$ $(\approx t, q_t+q_v)$-bounded $\mathcal{A}$
+such that \[ \text{Adv}_\text{PRFMAC[$F$]}^\text{ufcma}(\mathcal{B})
+\le \text{Adv}_F^\text{prf}(\mathcal{A}) + q_v/2^n \;\text{.} \]
+
+\paragraph{CBC-MAC}
+
+For a fixed $t$, and $F:\bit^{nt}\rightarrow\bit^n$, CBC-MAC[$F$] is secure,
+losing $(qt)^2/2^n$ advantage from that of $F$.
+
+\paragraph{Cipher-based MAC (CMAC)}
+Adds an extra step to the end of CBC-MAC
+to make it secure for arbitrary-length messages.
+
+Precompute $k_1$, $k_2$ $\in$ $\bit^n$ using $F_k(\texttt{0}^m)$.\\
+
+$m'_t \leftarrow \begin{cases}
+m'_t\oplus k_1 &: |m'_t|=n \\
+m' \Vert \texttt{000}\ldots \oplus k_2 &: |m'_t|<n
+\end{cases}$\\
+
+Run $m_1 \Vert \ldots \Vert m_t$ through CBC-MAC.
+
+\section{Combining authenticity and privacy}
+
+\paragraph{Integrity of ciphertexts (INT-CTXT)}
+$\Dec_k(c)$: returns decryption of $c$, or $\bot$ if $c$ is invalid.
+
+$SE=(\Gen,\Enc,\Dec)$ is INT-CTXT secure iff $\forall$ bounded $\mathcal{A}$,
+\[ \text{Adv}_{SE}^\text{int-ctxt}(\mathcal{A}) \eqdef
+\Pr_{k\leftarrow\Gen} \left[\;\mathcal{A}^{\Enc_k,\Dec_k}\;\text{wins}\;\right]
+< \eps \;\text{.} \]
+
+UF-CMA-security does not necessarily give INT-CTXT security.
+For example: If the output of $\Tag$ has a spurious bit that is
+ignored by $\Ver$. So we require a stronger condition:
+
+\paragraph{Strong unforgeability (SUF-CMA)}
+Winning is redefined as: $\Ver_k$ accepts $(m',t')$
+that was not previously a query/answer pair to $\Tag_k$.
+
+\paragraph{Bad idea: Encrypt-and-tag}
+$\AEnc \eqdef \EEnc_{k_e}(m) \Vert \Tag_{k_m}(m)$.
+The tag could reveal information about $m$.
+
+\paragraph{Bad idea: Tag-then-encrypt}
+$\AEnc \eqdef \EEnc_{k_e}( m \Vert \Tag_{k_m}(m) )$.
+The ciphertext might be forgeable (for example,
+if $\EEnc$ appends a spurious bit).
+
+\paragraph{Good idea: Encrypt-then-tag}
+$\AEnc \eqdef \EEnc_{k_e}(m) \Vert \Tag_{k_m}(\EEnc_{k_e}(m))$.
+
+\paragraph{Indistinguishability under chosen ciphertext attack (IND-CCA)}
+IND-CPA $\wedge$ INT-CTXT $\Rightarrow$ IND-CCA.
 
 \end{document}
