@@ -495,4 +495,97 @@ $\AEnc \eqdef \EEnc_{k_e}(m) \Vert \Tag_{k_m}(\EEnc_{k_e}(m))$.
 \paragraph{Indistinguishability under chosen ciphertext attack (IND-CCA)}
 IND-CPA $\wedge$ INT-CTXT $\Rightarrow$ IND-CCA.
 
+\section{Hashing}
+
+\paragraph{Hash function} $h:D\rightarrow \bit^n$, $D > 2^n$
+
+\paragraph{Collision} $x,x' \in D : h(x)=h(x') \wedge x \neq x'$
+
+\paragraph{Hash family} $H : \bit^\ell \times D \rightarrow \bit^n$
+
+\paragraph{Collision resistance (CR)}
+$H$ is $(t,\eps)$-collision resistant if
+$\text{Adv}_H^\text{cr}(\mathcal{A}) \le \eps$
+$\forall$ $t$-bounded $\mathcal{A}$.
+\[ \text{Adv}_H^\text{cr}(\mathcal{A}) = \Pr_{k\leftarrow\bit^\ell}
+\left[\;\mathcal{A}(k)\;\textrm{outputs a collision in}\;H_k\;\right] \]
+
+\paragraph{Real-world hash functions}
+\begin{tabular}{lrl}
+MD4 & $n=128$ & Broken \\
+MD5 & $n=128$ & Broken \\
+SHA-1 & $n=160$ & Maybe broken \\
+SHA-256 & $n=256$ & Good \\
+SHA-3 & & Good
+\end{tabular}
+
+Hash output lengths need to be longer than encryption key lengths
+because brute-force attacks can test $\approx q^2$ pairs in $q$ hashes
+(``birthday attack'').
+
+\paragraph{Second preimage resistance / target collision resistance (TCR)}
+Given $x$, attacker must find $x'$ such that $x,x'$ is a collision.
+\[ \text{Adv}_H^\text{tcr}(\mathcal{A}) =
+\Pr_{\substack{k\leftarrow\bit^\ell,\\x\leftarrow D}}
+\left[\;\mathcal{A}(k, x)\;\text{outputs a collision}\;\right] \]
+where $D$ is some distribution over the message space.
+
+Brute force attack does not have a birthday advantage in this game.
+
+CR $\Rightarrow$ TCR.
+
+\paragraph{One-wayness (OW)}
+
+\[ \text{Adv}_H^\text{ow}(\mathcal{A}) =
+\Pr_{\substack{k\leftarrow\bit^\ell,\\x\leftarrow D}}
+\left[\;\mathcal{A}(k, H_k(x))\;\text{outputs}\;x':H_k(x')=H_k(x)\;\right] \]
+
+TCR $\Rightarrow$ OW for ``high-entropy'' $D$
+(so that $H_k(x)$ reveals very little about $x$).
+
+\paragraph{Merkle-Damg{\aa}rd (MD) transform}
+$\text{MD}[h]_k(M\in\bit^*)$
+
+Uses a compression function $h_k:\bit^\ell\times\bit^{b+n}\rightarrow\bit^n$
+
+Break $M$ into $M1,\ldots,M_t$ s.t. $\|M_i\|=b$
+
+\begin{align*}
+y_1 &\leftarrow h_k(\;M_1\,\Vert\,\ang{0}\;) \\
+y_2 &\leftarrow h_k(\;M_2\,\Vert\,y_1\;) \\
+&\vdots\\
+y_i &\leftarrow h_k(\;M_i\,\Vert\,y_{i-1}\;) \\
+&\vdots\\
+y_t &\leftarrow h_k(\;M_t\,\Vert\,y_{t-1}\;) \\
+y &\leftarrow h_k(\;\ang{t}\,\Vert\,y_t\;)
+\end{align*}
+
+\paragraph{If $h$ is CR, then MD[h] is CR}
+Let $\mathcal{B}$ attack MD$[h]$ in CR game.
+We can build $\mathcal{A}$ attacking $h$ in CR game.
+$\mathcal{A}(k\in\bit^\ell)$ will use a collision
+$x,x'$ in MD$[h_k]$ to find a collision in $h_k$.
+
+If $x,x'$ have different numbers of blocks:
+Then $\ang{t}\,\Vert\,M_t, \ang{t'}\,\Vert\,M'_t$ is a collision in $h_k$.
+
+Otherwise: Walk backward through the MD process to find a step
+where $M_i\,\Vert\,y_{i-1} \neq M'_i\,\Vert\,y'_{i-1}$.
+
+\paragraph{HMAC} Secure MAC based on hash function.
+
+$\text{HMAC}_k(m) = H(
+  (k \oplus \text{opad})
+  \,\Vert\,
+  H(
+    (k \oplus \text{ipad})
+    \,\Vert\,
+    m
+  )
+)$
+where $k$ is the MAC key padded to the length of the compression function,
+ipad and opad are fixed strings of the same length.
+
+Only TCR security of $H$ is required for the security of HMAC.
+
 \end{document}
