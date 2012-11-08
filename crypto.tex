@@ -3,12 +3,8 @@
 \title{Notes from CS 6260 (Applied Cryptography)\\Georgia Tech, Fall 2012}
 \author{Christopher Martin\\{\tt chris.martin@gatech.edu}}
 
-\usepackage{hyperref}
-\usepackage{graphicx}
-\usepackage{wrapfig}
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{hyperref,graphicx,wrapfig,caption,subcaption}
+\usepackage{amsmath,amsfonts,amssymb,amsthm,dsfont}
 
 % bold math in headers
 \makeatletter
@@ -36,6 +32,9 @@
 \newcommand{\bit}{\ensuremath{\{\texttt{0},\texttt{1}\}}}
 
 \newcommand{\ang}[1]{\ensuremath{\langle#1\rangle}}
+
+\newcommand{\ZZ}{\ensuremath{\mathds{Z}}}
+\newcommand{\I}{\ensuremath{\mathds{1}}}
 
 \theoremstyle{remark}
 \newtheorem{thm}{Theorem}
@@ -587,5 +586,37 @@ where $k$ is the MAC key padded to the length of the compression function,
 ipad and opad are fixed strings of the same length.
 
 Only TCR security of $H$ is required for the security of HMAC.
+
+\section{Diffie-Hellman protocol (1976)}
+
+For establishing a secret key without meeting.
+
+$A$ chooses $a \in G$ and transmits $g^a$.
+$B$ chooses $b \in G$ and transmits $g^b$.
+The secret is $g^{ab}$.
+
+Requires a multiplicative group $(G,\cdot)$
+and a generator $g\in G$,
+and the discrete log problem must be intractable.
+
+\paragraph{Group axioms}
+
+\begin{itemize}
+\item $G$ is closed under $\cdot$
+\item $\I\cdot a=a\cdot\I=a$
+\item Every element of $G$ has a unique multiplicative inverse
+\item $(a\cdot b)\cdot c=a\cdot(b\cdot c)$
+\end{itemize}
+
+The group operator $\cdot$ is not necessarily commutative.
+
+\paragraph{Examples of groups}
+
+\begin{itemize}
+\item Integers under addition
+\item Square matrices with real entries and nonzero determinant under multiplication
+\item $\ZZ_N=\{0,1,\ldots,N-1\}$ under modular addition
+\item $\ZZ_N^*=\{a\in\ZZ_N:\gcd(a,N)=1\}$ under multiplication $(\bmod\;N)$
+\end{itemize}
 
 \end{document}
