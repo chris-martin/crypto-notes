@@ -31,10 +31,18 @@
 
 \newcommand{\bit}{\ensuremath{\{\texttt{0},\texttt{1}\}}}
 
-\newcommand{\ang}[1]{\ensuremath{\langle#1\rangle}}
+\newcommand{\ang}[1]{\ensuremath{\left\langle#1\right\rangle}}
+\newcommand{\abs}[1]{{\ensuremath{\left\vert#1\right\vert}}}
 
 \newcommand{\ZZ}{\ensuremath{\mathds{Z}}}
+\newcommand{\QR}{\ensuremath{\mathds{QR}}}
 \newcommand{\I}{\ensuremath{\mathds{1}}}
+\newcommand{\divides}{\mid}
+\newcommand{\pk}{\text{pk}}
+\newcommand{\sk}{\text{sk}}
+\renewcommand{\AE}{\text{AE}}
+\newcommand{\Adv}{\text{Adv}}
+\newcommand{\indcpa}{\text{indcpa}}
 
 \theoremstyle{remark}
 \newtheorem{thm}{Theorem}
@@ -587,17 +595,7 @@ ipad and opad are fixed strings of the same length.
 
 Only TCR security of $H$ is required for the security of HMAC.
 
-\section{Diffie-Hellman protocol (1976)}
-
-For establishing a secret key without meeting.
-
-$A$ chooses $a \in G$ and transmits $g^a$.
-$B$ chooses $b \in G$ and transmits $g^b$.
-The secret is $g^{ab}$.
-
-Requires a multiplicative group $(G,\cdot)$
-and a generator $g\in G$,
-and the discrete log problem must be intractable.
+\section{Groups}
 
 \paragraph{Group axioms}
 
@@ -614,9 +612,155 @@ The group operator $\cdot$ is not necessarily commutative.
 
 \begin{itemize}
 \item Integers under addition
-\item Square matrices with real entries and nonzero determinant under multiplication
+\item Invertible matrices with real entries under multiplication
 \item $\ZZ_N=\{0,1,\ldots,N-1\}$ under modular addition
 \item $\ZZ_N^*=\{a\in\ZZ_N:\gcd(a,N)=1\}$ under multiplication $(\bmod\;N)$
 \end{itemize}
+
+\paragraph{$\ZZ_N^*$ is closed under $\cdot$} Proof sketch:\\
+$\gcd(a\cdot b,N)=1 \implies \gcd(ab\bmod N,N)=1$.
+
+\paragraph{$\ZZ_N^*$ has unique inverses} Proof sketch:\\
+Use the fact $\gcd(a,N)=1 \iff \exists\;x,y\in\ZZ:ax+Ny=1$.\\
+$ax=1-Ny = 1 \mod N \implies x = a^{-1} \mod N$.
+
+\paragraph{Generator} $g\in G: \{g^0,g^1,g^2,\ldots\} = G$
+
+If $G$ is finite, then $a^\abs{G}=1\;\forall\;a\in G$.
+
+$g$ is a generator iff $g^i\neq\I\;\forall\;0<i<\abs{G}:i\divides G$
+
+For a prime $p$, $\ZZ_p^*$ is finite and cyclic (has a generator).
+Its order is $p-1$.
+
+\paragraph{Order} of $a\in G$ is $(\min i>0 : a^i=1)$.\\
+order$(a)$ divides $\abs{G}$.
+
+\paragraph{How many generators?}
+If $g\in G$ is a generator and $i$ is coprime with $\abs{G}$,
+then $g^i$ is a generator.
+Therefore we have $\abs{\ZZ_{p-1}^*}$ generators.
+
+\section{Diffie-Hellman protocol (1976)}
+
+For establishing a secret key without meeting.
+
+$A$ chooses $a \in G$ and transmits $g^a$.
+$B$ chooses $b \in G$ and transmits $g^b$.
+The secret is $g^{ab}$.
+
+Requires a multiplicative group $(G,\cdot)$
+and a generator $g\in G$,
+and the discrete log problem must be intractable.
+
+\paragraph{Calculations required for implementation}
+Multiply huge numbers $(\approx 2^{4096})$,
+exponentiate huge numbers,
+sample huge primes, find a generator of $\ZZ_p^*$.
+
+\paragraph{Multiplication}
+Simple grade-school multiplication algorithm
+followed by Euclid's division algorithm.
+Both are quadratic in bit length.
+
+\paragraph{Exponentiation}
+Repeated squaring. $O(\lg^3 a)$ multiplications.
+
+\paragraph{Primality testing}
+Miller-Rabin test runs in $O(\lg^3p)$, randomized with false positives.
+Alternately, AKS is a deterministic test running in $O(\lg^6p)$.
+Approximately $1/k$ of $k$-bit numbers are prime.
+
+\paragraph{Generator testing}
+$g$ is a generator if $g^{(p-1)/i}=1$ $\forall$
+prime divisors $i$ of $p-1$.
+Since factoring is hard, we must generate $p$ such that we know
+the factors of $p-1$ \ldots
+
+\paragraph{Sophie Germain (safe) primes}
+Pick a prime $q$ and let $p=2q+1$. Repeat until $p$ is prime.
+It appears that $1/k^2$ of $k$-bit numbers are safe primes,
+although this is unproven.
+
+\paragraph{Uniformity of shared secret}
+We want $ab\bmod(p-1)$, and therefore also $g^{ab}$,
+to be uniformly distributed.
+If $G=\ZZ_p^*$, this is not the case;
+$ab$ is even with probability $3/4$, and the $\bmod(p-1)$
+operation does not affect this parity (because $p-1$ is even).
+But if $G$ has prime order $q$, then $ab\bmod q$ is very nearly uniform
+($ab=0$ with probability $2/q$, anything else with probabilility $1/(q-1)$).
+
+\paragraph{Quadratic residue}
+The subgroup of quadratic residues in $\ZZ_p^*$ is
+$\QR_p^* = \{(g^2)^0, (g^2)^1, (g^2)^2, \ldots, (g^2)^{(p-3)/2}\}$.
+For $p=2q+1$, $\abs{\QR_p^*}=q$, so if $p$ is a safe prime,
+$\abs{\QR_p^*}$ has prime order.
+$g^2$ is a generator for $\QR_p^*$.
+
+\paragraph{Jacobi symbol} For $y\in\ZZ_p^*$, Jacobi symbol is
+$1$ if $y\in\QR_p^*$, and $-1$ otherwise.
+$y\in\QR_p^*\iff y^{(p-1)/2}=1$.
+Proof:
+$y^{(p-1)/2}=g^{i(p-1)/2}$ for some $i=2i'+b$, $b\in\{0,1\}$.
+Use the fact that $g^{(p-1)/2}=-1$.
+$y=g^{b(p-1)/2} = \{ 1 \text{ if } b=0\text{, } -1\text{ if } b=1 \}$.
+
+\section{Asymmetric encryption}
+
+\paragraph{Scheme $\AE=(\Gen,\Enc,\Dec)$}
+\begin{itemize}
+\item $(\pk,\sk)\gets\Gen$
+\item $c\gets\Enc_\pk(m)=\Enc(\pk,m)$ where
+      $m\in M_\pk$, and $M_\pk$ is some group
+\item $m\text{ or }\bot\gets\Dec_\sk(c)$
+\item \Gen\ and \Enc\ are randomized. \Dec\ is deterministic.
+\end{itemize}
+
+\paragraph{IND-CPA-security}
+\[\Adv_\AE^\indcpa(\mathcal{A})\eqdef
+\Pr_{(\pk,\sk)\gets\Gen}\left[\mathcal{A}^{L_\pk}(\pk)\right] -
+\Pr_{(\pk,\sk)\gets\Gen}\left[\mathcal{A}^{R_\pk}(\pk)\right]
+\] where $L_\pk(m_L,m_R)=\Enc_\pk(m_L)$
+and $R_\pk(m_L,m_R)=\Enc_\pk(m_R)$.
+
+\paragraph{IND-CCA-security}
+Like IND-CPA, but the attacker gets another oracle:
+\[ D_\sk(c)=\begin{cases}
+\Dec_\sk(c)&\text{if $c$ was not returned by L/R oracle}\\
+\bot&\text{otherwise}
+\end{cases}\text{ .} \]
+
+\paragraph{One encryption query}
+$\forall$ ind-cpa attacker $\mathcal{B}$ against AE,
+$\exists$ an ind-cpa attacker $\mathcal{A}$ against AE
+making $\le q\; \Enc$ queries
+such that $\Adv_\AE^\indcpa(\mathcal{B}) \le q\,\Adv_\AE^\indcpa(\mathcal{A})$.
+(Also, same for ind-cca with $1$ encryption query and unlimited $D_\sk$ queries.)
+The analogous claim is not true in a symmetric key setting.
+
+\paragraph{ElGamal}
+Asymmetric encryption scheme similar to Diffie-Hellman.
+\begin{itemize}
+\item $\Gen$: Choose group $G$ of order $n$, generator $g$.
+      Choose $x\gets\ZZ_n$. Output $(\sk=x,\pk=(G,G,X=g^x))$.
+\item $\Enc_\pk(m\in G)$: Choose $y\gets\ZZ_n$.
+      Output $c=(Y=g^y, \overbrace{m\cdot X^y}^{g^{xy}})$.
+\item $\Dec_\sk(\overbrace{Y}^{g^y},\overbrace{Z}^{m\cdot g^{xy}})$:
+      Output $\overbrace{Z}^{m\cdot g^{xy}}\cdot({\overbrace{Y^x}^{g^{xy}}})^{-1} = m$.
+\end{itemize}
+
+Not ind-cpa-secure for $G=\ZZ_p^*$.
+Attack: $(Y,Z)\gets O(1,g)$.
+Accept if $Z^{(p-1)/2}=1$, reject if $-1$.
+$\Pr[\mathcal{A}^L]=\Pr[1\cdot g^{xy}\;\text{is square}]=3/4$.
+$\Pr[\mathcal{A}^R]=\Pr[g^{xy+1}\;\text{is square}]=1/4$.
+
+Is ind-cpa-secure under assumption that DDH (decision Diffie-Hellman) is hard.
+
+Is not cca-secure.
+But the Cramer-Shoup scheme is,
+using two applications of ElGamal,
+under the DDH assumption.
 
 \end{document}
