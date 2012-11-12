@@ -3,8 +3,8 @@
 \title{Notes from CS 6260 (Applied Cryptography)\\Georgia Tech, Fall 2012}
 \author{Christopher Martin\\{\tt chris.martin@gatech.edu}}
 
-\usepackage{hyperref,graphicx,wrapfig,caption,subcaption}
-\usepackage{amsmath,amsfonts,amssymb,amsthm,dsfont}
+\usepackage{hyperref,graphicx,wrapfig,caption,subcaption,multirow}
+\usepackage{amsmath,amsfonts,amssymb,amsthm,dsfont,rotating}
 
 % bold math in headers
 \makeatletter
@@ -501,6 +501,23 @@ $\AEnc \eqdef \EEnc_{k_e}(m) \Vert \Tag_{k_m}(\EEnc_{k_e}(m))$.
 
 \paragraph{Indistinguishability under chosen ciphertext attack (IND-CCA)}
 IND-CPA $\wedge$ INT-CTXT $\Rightarrow$ IND-CCA.
+
+\section{Summary of symmetric crypto games}
+
+\begin{tabular}{ll|l|l}
+&& Oracles & Goal \\ \hline
+\multirow{2}{*}{\begin{sideways}$\xleftarrow{\text{Stronger}}$\end{sideways}}
+& IND-CPA & L/R & \multirow{2}{*}{Left or right?} \\
+& IND-CCA & L/R, $\hat{\mathsf{Dec}}$ \\ & & \\ \hline
+\multirow{2}{*}{\begin{sideways}$\xleftarrow{\text{Stronger}}$\end{sideways}}
+& INT-PTXT & \multirow{2}{*}{$\mathsf{Enc}$, $D$} & $D$ returns new plaintext \\
+& INT-CTXT & & $D$ returns non-$\bot$ on new ciphertext \\ & & \\ \hline
+\multirow{2}{*}{\begin{sideways}$\xleftarrow{\text{Stronger}}$\end{sideways}}
+& UF-CMA & \multirow{2}{*}{$\mathsf{Tag}$, $\mathsf{Ver}$}
+& $\mathsf{Ver}(m,t) :$ $m$ has never been tagged \\
+& SUF-CMA &
+& $\mathsf{Ver}(m,t) :$ $(m,t)$ has never been a $\mathsf{Tag}$ pair \\ \\
+\end{tabular}
 
 \section{Hashing}
 
