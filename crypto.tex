@@ -1,6 +1,6 @@
 \documentclass[11pt]{article}
 \date{}
-\title{Notes from CS 6260 (Applied Cryptography)\\Georgia Tech, Fall 2012}
+\title{Cryptography notes\\CS 6260 (Fall 2012) and CS 7560 (Spring 2013)}
 \author{Christopher Martin\\{\tt chris.martin@gatech.edu}}
 
 \usepackage{hyperref,graphicx,wrapfig,caption,subcaption,multirow}
@@ -35,6 +35,7 @@
 \newcommand{\abs}[1]{{\ensuremath{\left\vert#1\right\vert}}}
 
 \newcommand{\ZZ}{\ensuremath{\mathds{Z}}}
+\newcommand{\N}{\ensuremath{\mathds{N}}}
 \newcommand{\QR}{\ensuremath{\mathds{QR}}}
 \newcommand{\I}{\ensuremath{\mathds{1}}}
 \newcommand{\divides}{\mid}
@@ -43,6 +44,11 @@
 \renewcommand{\AE}{\text{AE}}
 \newcommand{\Adv}{\text{Adv}}
 \newcommand{\indcpa}{\text{indcpa}}
+\newcommand{\K}{\ensuremath{\mathcal{K}}}
+\newcommand{\M}{\ensuremath{\mathcal{M}}}
+\newcommand{\C}{\ensuremath{\mathcal{C}}}
+\newcommand{\ppt}{\textit{ppt}}
+\newcommand{\nuppt}{\textit{nuppt}}
 
 \theoremstyle{remark}
 \newtheorem{thm}{Theorem}
@@ -54,14 +60,12 @@
 \section{Symmetric cryptography scheme}
 
 \begin{tabular}{r|l}
-Key space & $\mathcal{K}$ \\
-Message space & $\mathcal{M}$ \\
-Cypher space & $\mathcal{C}$ \\
-Key generator & $\Gen : \phi \rightarrow \mathcal{K}$ \\
-Encryption function &
-$\Enc : \{\mathcal{K} \times \mathcal{M}\} \rightarrow \mathcal{C}$ \\
-Decryption function &
-$\Dec : \{\mathcal{K} \times \mathcal{C}\} \rightarrow \mathcal{M}$
+Key space & \K{} \\
+Message space & \M{} \\
+Cypher space & \C{} \\
+Key generator & $\Gen : \phi \rightarrow \K$ \\
+Encryption function & $\Enc : \{ \K \times \M \} \rightarrow \C$ \\
+Decryption function & $\Dec : \{ \K \times \C \} \rightarrow \M$
 \end{tabular}
 
 \section{Information theoretic security}
@@ -70,30 +74,79 @@ Information theoretic security repels even resource-unbounded attackers.
 Shannon secrecy and perfect secrecy are equivalent definitions of
 information theoretic security for symmetric cryptography schemes.
 
+Information security turns out to be a stronger definition than
+necessary, so generally we will instead consider computational security,
+which will impose computation bounds on attackers.
+
 \paragraph{Shannon secrecy}
-A scheme is Shannon-secret with respect to the distribution $D$ over $\mathcal{M}$
-iff the ciphertext reveals no additional information about the message.
-\[ \forall \, M \in \mathcal{M}, \, C \in \mathcal{C}: \;
-  \Pr_{\substack{k \leftarrow \Gen\\m \in D}} \big[\, m = M \,\vert\, \Enc_k(m) = C \,\big]
-= \Pr_{m\in D} \big[\, m = M \,\big] \]
+A scheme is Shannon-secret iff the ciphertext reveals no additional
+information about the message.
+
+$\forall$ distribution $D$ over $M$, $\bar{m} \in \M$, $\bar{c} \in \C$:
+\[ \Pr_{\substack{k \gets \Gen\\m \in D}} \big[\, m = \bar{m} \,\vert\, \Enc_k(m) = \bar{c} \,\big]
+ = \Pr_{m\in D} \big[\, m = \bar{m} \,\big] \]
 
 \paragraph{Perfect secrecy}
 A scheme is perfectly secret iff the distributions of ciphertexts for any
 two messages are identical.
-\[\forall\, M_1, M_2 \in \mathcal{M},\, C \in \mathcal{C}:\;
-  \Pr_{K_1\leftarrow\Gen} \big[\, \Enc_{K_1}(M_1) = C \,\big]
-= \Pr_{K_2\leftarrow\Gen} \big[\, \Enc_{K_2}(M_2) = C \,\big] \]
+
+$\forall\, m_1, m_2 \in \M,\, c \in \C$:
+\[ \Pr_{k_1\gets\Gen} \big[\, \Enc_{k_1}(m_1) = c \,\big]
+ = \Pr_{k_2\gets\Gen} \big[\, \Enc_{k_2}(m_2) = c \,\big] \]
 
 This model considers only a single message and ciphertext,
 so although a one-time pad is perfectly secret, a ``two-time pad'' is not.
 
 \begin{thm}
-Perfect secrecy $\Rightarrow$ $|\mathcal{K}| \ge |\mathcal{M}|$.
+Perfect secrecy $\Rightarrow$ $\abs{\K} \ge \abs{\M}$.
 \begin{proof}
-If not, $\exists$ $2$ messages with different probabilities
-of encrypting to the same cypertext.
+Let $D$ be uniform over $\M$, and
+let $\bar{m} \in \M$, $\bar{c} \in \Enc_k(\bar{m})$, $\bar{k}\in \K$ be arbitrary.
+Let $S = \{ \Dec_k(\bar{c}) : k \in \K \}$.
+$\abs{S} < \abs{\M}$ because $\Dec$ must be deterministic.
+\[ \Pr_{m \gets D}[\;m = \hat{m}\;] = \frac{1}{\abs{\M}} \; \forall \; \hat{m} \in \M \; \text{.} \]
+
+If we choose $\hat{m} \in \M\backslash S$, then
+\[ \Pr_{\substack{m\gets D,\\k \gets \Gen}}[\; m = \hat{m} \,\vert\, \Enc_k(m) = \bar{c}\;] = 0 \; \text{.} \]
 \end{proof}
 \end{thm}
+
+\section{One-way functions}
+
+A function $f: \bit^* \rightarrow \bit^*$ is a one-way-function if:
+\begin{itemize}
+\item Easy to compute: $\exists$ a \ppt{} algorithm $F$ such that $F(x) = f(x)$ $\forall$ $x$.
+\item Hard to invert: $\forall$ \nuppt{} $A$, the advantage
+  \[ \Pr_{x\gets \bit^n}[\;
+     A(\underbrace{\;\;\;\;\;\;\texttt{1}^n\;\;\;\;\;\;}_{\text{helps bound $A$}} \Vert f(x))
+     \in \underbrace{f^{-1}(f(x))}_{\text{preimages of $f(x)$}}
+  \;] \] is negligible in $n$.
+\end{itemize}
+
+The domain and range are given as $\bit^*$ for convenience,
+but any $D_n \rightarrow R_n$ is okay if $D_n$ can be efficiently sampled.
+
+\paragraph{Subset-sum}
+$f_{\text{ss}}$: $(\ZZ_N)^n \times \bit^n \rightarrow (\ZZ_N)^n \times \ZZ_N$, $N = 2^n$
+
+$f_{\text{ss}}(a_1, \ldots, a_n, b_1, \ldots, b_n) = (a_1, \ldots, a_n, S = \sum_{i=1}^n a_i b_i \bmod N)$
+
+Subset-sum is NP-complete. This might be a one-way function.
+
+\paragraph{Prime multiplication}
+$f : (\text{primes}_n)^2 \rightarrow \N$
+
+$f(x,y) = xy$
+
+Might be a one-way function.
+
+\paragraph{Weak one-way functions}
+
+A weak one-way function has advantage $\le 1-\delta$ for some $\delta = \frac{1}{\text{poly}(n)}$.
+
+Multiplication might be a weak one-way function, because there are a lot of primes.
+
+We can use a weak one-way function to find a one-way function.
 
 \section{Pseudo-random functions}
 
