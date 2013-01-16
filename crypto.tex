@@ -121,7 +121,7 @@ A function $f: \bit^* \rightarrow \bit^*$ is a one-way-function if:
 \item Easy to compute: $\exists$ a \ppt{} algorithm $F$ such that $F(x) = f(x)$ $\forall$ $x$.
 \item Hard to invert: $\forall$ \nuppt{} $A$, the advantage
   \[ \Pr_{x\gets \bit^n}[\;
-     A(\underbrace{\;\;\;\;\;\;\texttt{1}^n\;\;\;\;\;\;}_{\text{helps bound $A$}} \Vert f(x))
+     A(\underbrace{\;\;\;\;\;\;\texttt{1}^n\;\;\;\;\;\;}_{\text{helps bound $A$}}, f(x))
      \in \underbrace{f^{-1}(f(x))}_{\text{preimages of $f(x)$}}
   \;] = \negl(n) \]
 \end{itemize}
@@ -151,7 +151,7 @@ Multiplication might be a weak one-way function, because there are a lot of prim
 
 We can use a weak one-way function to find a one-way function.
 If $f$ is $\delta$-OWF, then $f'$ is strong-OWF where
-\[ f'(x_1 \cat \ldots \cat x_m) = f(x_1) \cat \ldots \cat f(x_m) \]
+\[ f'(x_1, \ldots, x_m) = f(x_1), \ldots, f(x_m) \]
 
 Assume $\AAA'$ with non-negl advantange $\alpha(n)$ against $f'$.
 
