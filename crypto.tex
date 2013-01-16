@@ -49,6 +49,9 @@
 \newcommand{\C}{\ensuremath{\mathcal{C}}}
 \newcommand{\ppt}{\textit{ppt}}
 \newcommand{\nuppt}{\textit{nuppt}}
+\newcommand{\negl}{\text{negl}}
+\newcommand{\cat}{\ensuremath{\,\Vert\,}}
+\newcommand{\AAA}{\ensuremath{\mathcal{A}}}
 
 \theoremstyle{remark}
 \newtheorem{thm}{Theorem}
@@ -120,7 +123,7 @@ A function $f: \bit^* \rightarrow \bit^*$ is a one-way-function if:
   \[ \Pr_{x\gets \bit^n}[\;
      A(\underbrace{\;\;\;\;\;\;\texttt{1}^n\;\;\;\;\;\;}_{\text{helps bound $A$}} \Vert f(x))
      \in \underbrace{f^{-1}(f(x))}_{\text{preimages of $f(x)$}}
-  \;] \] is negligible in $n$.
+  \;] = \negl(n) \]
 \end{itemize}
 
 The domain and range are given as $\bit^*$ for convenience,
@@ -136,17 +139,64 @@ Subset-sum is NP-complete. This might be a one-way function.
 \paragraph{Prime multiplication}
 $f : (\text{primes}_n)^2 \rightarrow \N$
 
-$f(x,y) = xy$
-
-Might be a one-way function.
+$f(x,y) = xy$ might be a one-way function.
 
 \paragraph{Weak one-way functions}
 
-A weak one-way function has advantage $\le 1-\delta$ for some $\delta = \frac{1}{\text{poly}(n)}$.
-
+For a weak one-way function, any adversary has advantage $\le 1-\delta$
+for some $\delta = \frac{1}{\text{poly}(n)}$.
 Multiplication might be a weak one-way function, because there are a lot of primes.
 
+\paragraph{Hardness amplification}
+
 We can use a weak one-way function to find a one-way function.
+If $f$ is $\delta$-OWF, then $f'$ is strong-OWF where
+\[ f'(x_1 \cat \ldots \cat x_m) = f(x_1) \cat \ldots \cat f(x_m) \]
+
+Assume $\AAA'$ with non-negl advantange $\alpha(n)$ against $f'$.
+
+\[ G_i \eqdef \left\{ x_i : \Pr_{\substack{x_j\gets\bit^n,\\j\neq i}}[\;
+  \AAA'(f'(x'=(x_1 \ldots x_m))) \; \text{inverts}
+\;] \ge \frac{\alpha}{2m} \right\} \]
+
+For $m \ge \frac{2n}{\delta}$,
+$\exists$ $i$ such that $\frac{\abs{G_i}}{2^n} \ge 1-\delta/2$.
+Proof: Suppose not.
+\begin{align*}
+\Pr_{x'}[\;\AAA'(f'(x'))\;\text{inverts}\;]
+&\le \Pr_{x'}[\;\AAA'\;\text{inverts}\;\wedge\;\text{every}\;x_i\in G\;] \\
+ &\hspace{3em}+ \sum_{i=1}^m \Pr[\;\AAA' \;\text{succeeds}\;\wedge x_i \not\in G\;] \\
+&\le \Pr_x[\;\text{every}\;x_i \in G_i\;]
+ + \sum_{i=1}^m \Pr[\;\AAA' \;\text{succeeds}\;|\;x_i \not\in G\;] \\
+&\le (1-\frac{\delta}{2})^{2n/\delta} + \sum_{i=1}^m \frac{\alpha}{2m} \\
+&\le 2^{-n} + \frac{\delta}{2} < \delta
+\end{align*}
+
+Construct $\AAA$ against $f$:
+$\AAA(\texttt{1}^n, y=f(x_i))\eqdef$ Repeat: Choose all of the $x_j$ for $j \neq i$,
+invoke $\AAA'(f'(x')))$, win if $\AAA'$ succeeds.
+
+\[ \Pr_{x_i}[\;\AAA \; \text{inverts}\;] \approx \Pr_{x_i}[x_i\;\text{is good}] \ge 1-\delta/2 \]
+
+\paragraph{Family of one-way functions}
+$F = \{ f_s : D_s \rightarrow R_s \}$
+\begin{itemize}
+\item Easy to sample a function: $\exists$ $ppt$ $S(\texttt{1}^n)$ outputs some $f_s \in F$
+\item Easy to sample from $D_s$
+\item Easy to evaluate $f_s(x)$
+\item Hard to invert: $\forall$ $\nuppt$ $\AAA$,
+\[ \Adv_F(\AAA) = \Pr_{\substack{s\gets S(\texttt{1}^n),\\x\gets D_s}} [\;
+  \AAA(\texttt{1}^n, s, f_s(x)) \in f_s^{-1}(f_s(x))
+\;] = \negl(n) \]
+\end{itemize}
+
+\paragraph{Family of subset-sum functions}
+\[F_{\text{ss}} = \left\{ f_{\vec{a}}(b_1,\ldots,b_n) = \sum_i a_i\cdot b_i \bmod N \right\} \]
+
+\paragraph{Rabin's function}
+$f_N : \ZZ_N^* \rightarrow \ZZ_N^*$,
+$N=pq$ for distinct primes $p$, $q$,
+$f_N(x)=x^2 \bmod N$
 
 \section{Pseudo-random functions}
 
