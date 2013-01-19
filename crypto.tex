@@ -52,6 +52,7 @@
 \newcommand{\negl}{\text{negl}}
 \newcommand{\cat}{\ensuremath{\,\Vert\,}}
 \newcommand{\AAA}{\ensuremath{\mathcal{A}}}
+\newcommand{\BBB}{\ensuremath{\mathcal{B}}}
 
 \theoremstyle{remark}
 \newtheorem{thm}{Theorem}
@@ -197,6 +198,48 @@ $F = \{ f_s : D_s \rightarrow R_s \}$
 $f_N : \ZZ_N^* \rightarrow \ZZ_N^*$,
 $N=pq$ for distinct primes $p$, $q$,
 $f_N(x)=x^2 \bmod N$
+
+\paragraph{Rabin OWF family $\iff$ factoring is hard}
+
+Chinese remainder theorem:
+$h: \ZZ_N \to \ZZ_p \times \ZZ_q$\\
+$p,q$ distinct primes, $N=pq$\\
+$h(x) = (x \bmod p, x \bmod q)$ \\
+Ring homomorphism: $h(x\cdot y) = h(x) \cdot h(y)$, $h(x+y) = h(x) + h(y)$\\
+... is an isomorphism (a bijection)
+
+$\abs{\QR_p^*}=(p-1)/2$ for any odd prime $p$:
+because $a^2 = (-a)^2 = (p-a)^2 \mod p$.
+$\ZZ_p$ is a field so there are $\le 2$ square roots for any element.
+Therefore $x \rightarrow x^2 \mod p$ is a 2-to-1 function $\ZZ_p^* \rightarrow \QR_p^*$
+
+$\ZZ_N^* \cong \ZZ_p^* \times \ZZ_q^*$, so $\QR_N^* \cong \QR_p^* \times \QR_q^*$
+$\implies$ $\abs{QR_N^*} = \frac{p-1}{2}\frac{q-1}{2} = \frac{\phi(N)}{4}$ \\
+For $(a_p, a_q) \in \QR_p^*\times\QR_q^*$, $(\pm\sqrt{a_p},\pm\sqrt{a_q})^2 = (a_p,a_q)$,
+so Rabin is 4-to-1.
+
+Lemma: Given any $x_1, x_2 \in \ZZ_N^*$ such that $x_1^2 = x_2^2$ but $x_1 \neq \pm x_2 \mod N$,
+the factorization of $N$ can be computed efficiently.
+Proof: $x_1^2 = x_2^2 \mod p$ and $\mod q$.
+So $x_1=\pm x_2 \mod p$ and $x_1=\pm x_2 \mod q$, but the $\pm$ for these
+two statements cannot both be $+$ or both $-$.
+Otherwise, by Chinese remainder theorem, $x_1 = x_2$.
+w.l.o.g. $x_1 = +x_2 \mod p$ and $x_1 = -x_2 \mod q$.
+So $p \divides (x_1-x^2)$ and $q\nmid(x_1-x_2)$,
+and $\gcd(N, x_1-x_2) = p$.
+
+If factoring is easy: $\AAA(N=pq, y=x^2\mod N)\eqdef$
+Factor $N$ into $p,q$.
+Compute $\sqrt{y\bmod p}\in\ZZ_p^*$, $\sqrt{y\bmod q}\in\ZZ_q^*$ (proof omitted).
+Reconstruct $\sqrt{y}\in\ZZ_N^*$ using Chinese remainder theorem bijection (proof omitted).
+
+If Rabin inversion is easy:
+Assume $\exists$ $\BBB$ for which
+$\Pr_{N\gets pq,X\gets\ZZ_N^*}[\BBB(N, y=x^2\bmod N)\in\sqrt{y}] \ge \alpha(n)$ non-$\negl(n)$.
+Build $\AAA(N=pq)$: Choose $x\gets\ZZ_N^*$, let $y=x^2\mod N$.
+$\BBB(N, y) = x' \in \ZZ_N^*$ such that $(x')^2 = y \mod N$ (w.p. $\ge\alpha(n)$).
+If $x \neq \pm x' \mod N$ (w.p. $1/2$), we can use the lemma.
+Overall, succeeds w.p. $\ge \alpha(n)/2$.
 
 \section{Pseudo-random functions}
 
