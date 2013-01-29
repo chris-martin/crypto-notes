@@ -1,3 +1,4 @@
+
 \documentclass[11pt]{article}
 \date{}
 \title{Cryptography notes\\CS 6260 (Fall 2012) and CS 7560 (Spring 2013)}
@@ -50,9 +51,11 @@
 \newcommand{\ppt}{\textit{ppt}}
 \newcommand{\nuppt}{\textit{nuppt}}
 \newcommand{\negl}{\text{negl}}
+\newcommand{\poly}{\text{poly}}
 \newcommand{\cat}{\ensuremath{\,\Vert\,}}
 \newcommand{\AAA}{\ensuremath{\mathcal{A}}}
 \newcommand{\BBB}{\ensuremath{\mathcal{B}}}
+\newcommand{\OOO}{\ensuremath{\mathcal{O}}}
 
 \theoremstyle{remark}
 \newtheorem{thm}{Theorem}
@@ -241,6 +244,11 @@ $\BBB(N, y) = x' \in \ZZ_N^*$ such that $(x')^2 = y \mod N$ (w.p. $\ge\alpha(n)$
 If $x \neq \pm x' \mod N$ (w.p. $1/2$), we can use the lemma.
 Overall, succeeds w.p. $\ge \alpha(n)/2$.
 
+\section{Psuedo-random generators (PRGs)}
+
+If $\exists$ a PRG $G$ with output length $n+1$, $\exists$ a PRG $G_\ell$ with
+output length $\ell(n) = \poly(n)$.
+
 \section{Pseudo-random functions}
 
 \paragraph{Uniformly random function}
@@ -286,6 +294,52 @@ $\eps$ & $2^{-128}$
 The existence of secure PRFs has not been proven,
 but there are some functions that have never been
 broken and are widely assumed to be PRFs.
+
+\section{Goldreich-Levin}
+
+Given $\overline{F}(x)$ OWF, define $F(x,r)\eqdef(\overline{F}(x), r)$ for $\abs{x}=\abs{r}$.
+Then \[ h(x,r)\eqdef \ang{x,r} \bmod 2 = \sum_{j=1}^n x_j \cdot r_j \bmod 2 \]
+is hard-core for $F$.
+
+Suppose $\exists$ $\AAA$ and non-negl $\delta$ s.t. \[
+\Pr_{x,r\gets\bit^n}[\;\AAA(\overline{F}(x), r) = \ang{x,r}\;] \ge \frac{1}{2} + 2\delta
+\]
+Then we'll construct $\BBB$ s.t. \[
+\Pr_{x\gets\bit^n}[\;\BBB(\overline{F}(x)) \in \overline{F}^{-1}(\overline{F}(x))\;] \ge \delta
+\]
+
+Let $\OOO(\cdot) \eqdef \AAA(y, \cdot)$.
+
+Define SC($z$, $\{r\}_m\in\bit^n$, $\{b\}_m\in\bit$) for $m = O(\log n)$.
+Assume that $b_j=\ang{x,r_j}$ (we will end up trying all the $\{b\}$).
+
+For each subset $S \subseteq [m]$: Let $b_S = \sum_{j\in S} b_j$ and $r_s = \sum_{j\in S} r_j$.
+So $\ang{x,r_s} = \ang{x,\sum_{j\in S} r_j} = \sum_{j\in S}\ang{x,r_j} = \sum_{j\in S} b_j = b_S$.
+Then $c_S \gets \OOO(z+r_s) - b_S$. Return the majority value of $c_S$.
+
+$\BBB$:
+\begin{quote}
+For each $j\in[m]$ choose $r_j\gets\bit^n$ randomly.
+
+For each $\{b\}\in\bit^m$:
+\begin{quote}
+For each $k\in[n]$ let $x'_k \gets$ SC$(e_k, \{r\}_m, \{b\}_m)$
+
+Let $x' = x'_1 \ldots x'_n$. Output $x'$ if it is an inversion.
+\end{quote}
+\end{quote}
+
+Over random choice of the $r_j$, the $r_S$ are uniformly random
+and pairwise independent for all $S \neq \phi$.
+
+$X_S \eqdef \text{ind}(\OOO(z+r_s)\;\text{is correct}(=\ang{x,z+r_s}))$
+
+We're interested in whether $X=\sum_{S\subseteq[m]} X_S > \frac{m}{2}$
+
+\paragraph{Local list-decoding the Hadamard code}
+With a weak SC and $<\frac{1}{4}$ fraction of errors, can recover the unique $x$.
+GL says with strong SC at $\frac{1}{2}-\delta$ fraction of errors, we can
+recover all possible $x$.
 
 \section{Reduction}
 
