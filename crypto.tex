@@ -247,7 +247,8 @@ Overall, succeeds w.p. $\ge \alpha(n)/2$.
 \section{Psuedo-random generators (PRGs)}
 
 If $\exists$ a PRG $G$ with output length $n+1$, $\exists$ a PRG $G_\ell$ with
-output length $\ell(n) = \poly(n)$.
+output length $\ell(n) = \poly(n)$:
+\[G_\ell(x) = ( h(x), h(f(x)), h(f^2(x)), h(f^3(x)), \ldots, h(f^{\ell-1}(x)) )\]
 
 \section{Pseudo-random functions}
 
