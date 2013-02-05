@@ -250,6 +250,17 @@ If $\exists$ a PRG $G$ with output length $n+1$, $\exists$ a PRG $G_\ell$ with
 output length $\ell(n) = \poly(n)$:
 \[G_\ell(x) = ( h(x), h(f(x)), h(f^2(x)), h(f^3(x)), \ldots, h(f^{\ell-1}(x)) )\]
 
+\subsection{PRG implies PRF}
+
+PRG with $\ell(n)=2n$ implies a PRF family. Write $G(x)=G_0(x)\cat G_1(x)$ and:
+\[f_s(x) = G_{x_n}( \ldots G_{x_2}(G_{x_1}(s))) \ldots )\]
+
+Given $\AAA$ that distinguishes $f$, build $\BBB(z=z_0\cat z_1)$:
+When $\AAA$ queries with $x$, answer with $G_{x_n}(\ldots G_{x_2}(z_{x_1}) \ldots)$.
+If $z=G(s)$, then $\BBB$ simulates $f_s$. If $z\gets\mathcal{U}_{2n}$, $\BBB$'s
+responses are computationally indistinguishable from random.
+TODO: Why isn't this argument that simple?
+
 \section{Pseudo-random functions}
 
 \paragraph{Uniformly random function}
